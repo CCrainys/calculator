@@ -1,0 +1,71 @@
+%!TEX encoding = UTF-8 Unicode
+%!TEX program = xelatex
+
+\documentclass[bachelor]{ustcthesis}
+% bachelor|master|doctor
+\usepackage{ustcextra}
+\graphicspath{{figures/}}
+\bibliographystyle{ustcauthoryear}
+% \bibliographystyle{ustcnumerical}
+
+
+\newcommand{\docname}{计算器软件}
+\renewpagestyle{front}[\zihao{-5}]{
+    \sethead{}{\docname 需求规格说明书}{}
+    \setfoot{}{\thepage}{}
+    \headrule
+}
+\renewpagestyle{main}[\zihao{-5}]{
+    \sethead{}{\docname 需求规格说明书}{}
+    \setfoot{}{\thepage}{}
+    \headrule
+}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\begin{document}
+
+
+
+\begin{titlepage}
+\begin{center}
+~\\[5cm]
+\HRule \\[0.4cm]
+{\huge \bfseries \docname\\需求规格说明书}\\[0.4cm]
+\HRule \\[1.5cm]
+
+\begin{tabular}{ccc}
+  & 人员 & 日期 \\ 
+拟制 & 阮超逸\ 周高超\ 肖文宗 & 2018-3-17 \\ 
+评审人 & • &  - -  \\ 
+批准 & • &  - -  \\ 
+签发 & • &  - -  \\ 
+\end{tabular} 
+
+\end{center}
+\end{titlepage}
+
+
+
+\frontmatter
+\input{chapters/abstract}
+\tableofcontents
+\listoffigures
+\listoftables
+% \listofalgorithms  % 算法索引，如不需要，可直接注释掉本行
+% \input{chapters/notation}
+
+\mainmatter
+\input{chapters/intro}
+\input{chapters/overview}
+\input{chapters/concrete_requirement}
+\input{chapters/design_constraint}
+\input{chapters/quality_characteristics}
+\input{chapters/others}
+\input{chapters/dependency}
+\input{chapters/importance_of_requirements}
+\input{chapters/to_be_determined}
+%\input{chapters/latex_examples}
+%\bibliography{bib/tex}
+
+
+\end{document}
