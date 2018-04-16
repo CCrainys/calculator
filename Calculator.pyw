@@ -1,32 +1,38 @@
 import tkinter
 from tkinter import *
 import tkinter.messagebox as mbox
-from numpy import *
+import re
 from re import *
-from numpy.linalg import *
+
+import numpy
+from numpy import mat,ones,zeros,eye,diag,multiply,vstack,hstack
+from numpy.random import rand
+from numpy.linalg import det
 
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
 from matplotlib.widgets import TextBox, Button
 import numpy as np
 from functools import partial
-from math import log, log10,sin,exp,pi,cos
-
 import math
-from math import *
+from math import pi,e,exp,log,log10,sin,cos,tan,floor,ceil,modf
+from math import asin as arcsin,acos as arccos,atan as arctan,asinh as arcsinh,acosh as arccosh,atanh as arctanh
+
 import scipy
 from scipy.special import perm as perm, comb as comb, factorial as fact
 
 from tkinter import ttk as ttk
-import numpy
 
 from matplotlib import pyplot
 import pylab as pl
 
 import sympy
-from sympy import *
+from sympy import oo as oo,I as i,E as E
+from sympy import Abs as Abs,integrate as integrate,conjugate as Conj,limit as limit,diff as diff,series as series, solve as solve, simplify as simplify
 
-'''*****************************************************************窗体设计部分*****************************************************************'''
+
+
+'''*****************************************************************计算器设计部分*****************************************************************'''
 
 root = None
 
@@ -51,7 +57,7 @@ def main():
     Preference = tkinter.Menu(Menubar,tearoff = 0)
     Preference.add_command(label = '普通计算',command = lambda:main())
     Preference.add_command(label = '统计数学',command = lambda:Statistics())
-    Preference.add_command(label = '微积分',command = lambda:Calculus())
+    Preference.add_command(label = '符号数学',command = lambda:Symbolic())
     Preference.add_command(label = '线性代数',command = lambda:LinearAlgebra())
     Preference.add_cascade(label = '绘图',menu = PlotList)
 
@@ -69,13 +75,21 @@ def main():
     Menubar.add_cascade(label = '编辑',menu = Edit)
     Menubar.add_cascade(label = '帮助',menu = Help)
     root['menu'] = Menubar
+    root.geometry("+100+100")
 
     #窗体大小、名称与图标
-    root.maxsize(800,520)
-    root.minsize(800,520)
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    ww = 800
+    wh = 520
+    x = (sw-ww) / 2
+    y = (sh-wh) / 2
+    root.geometry("%dx%d+%d+%d" %(ww,wh,x,y))
     root.resizable(False,False)
     root.title('Calculator')
     root.iconbitmap('.\Calculator.ico')
+
+    
 
     #当前表达式（计算结果）、上一次计算的表达式与‘M’累加器显示屏
     result = tkinter.StringVar()    #当前表达式（结果）
@@ -264,9 +278,6 @@ def main():
     btnDms.place(x = 10,y = 395,width = 60,height = 50)
     btnRad = tkinter.Button(root,text = 'deg',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('deg('))
     btnRad.place(x = 10,y = 450,width = 60,height = 50)
-
-
-    '''*****************************************************************功能实现部分*****************************************************************'''
 
 
     #整体符号表：每一项都是一个整体，按BS删除时一起删除
@@ -515,9 +526,6 @@ def main():
         return res
 
 
-    '''*****************************************************************输入响应部分*****************************************************************'''
-
-
     #表达式输入
     def PressExpr(Sym):
         nonlocal A,B,C,D,E,F,x,y,M,UniSym,FuncSym,SingleSym,OperaSym,NumBtn,MBtn,DecOprBtn,FuncBtn,priorAns,isShift,curRadix,ans
@@ -719,6 +727,7 @@ def main():
     #计算表达式的值
     def PressEqual():
         nonlocal A,B,C,D,E,F,x,y,M,UniSym,FuncSym,SingleSym,OperaSym,NumBtn,MBtn,DecOprBtn,FuncBtn,priorAns,isShift,curRadix,ans
+        nonlocal sin,cos,tan,arcsin,arccos,arctan,arcsinh,arccosh,arctanh,ln,log,deg,rad,grad,ToDms,DmsTo,comp
         try:
             DispStr = result.get()
             CompStr = DispStr
@@ -734,7 +743,7 @@ def main():
             FixedExpr = RadixFixExpr(CompStr)
 
             if curRadix != 'Dec':
-                ans = int(modf(eval(FixedExpr))[1])
+                ans = int(eval(FixedExpr))
             elif abs(eval(FixedExpr) - int(eval(FixedExpr))) <= 1e-17:
                 ans = int(eval(FixedExpr))
             else:
@@ -776,7 +785,7 @@ def main():
         except ZeroDivisionError:
             tkinter.messagebox.showerror('除零错误',message = '除法计算时！除数不能为0！')
             return -1
-        '''except ValueError:
+        except ValueError:
             tkinter.messagebox.showerror('非法运算',message = '结果异常！请检查计算是否合法！')
             return -1
         except OverflowError:
@@ -784,10 +793,12 @@ def main():
             return -1
         except:
             tkinter.messagebox.showerror('语法错误',message = '表达式有误！')
-            return -1'''
+            return -1
     root.mainloop()
 
+
 '''*****************************************************************窗体设计部分*****************************************************************'''
+
 
 def LinearAlgebra():
     global root
@@ -809,7 +820,7 @@ def LinearAlgebra():
     Preference = tkinter.Menu(Menubar,tearoff = 0)
     Preference.add_command(label = '普通计算',command = lambda:main())
     Preference.add_command(label = '统计数学',command = lambda:Statistics())
-    Preference.add_command(label = '微积分',command = lambda:Calculus())
+    Preference.add_command(label = '符号数学',command = lambda:Symbolic())
     Preference.add_command(label = '线性代数',command = lambda:LinearAlgebra())
     Preference.add_cascade(label = '绘图',menu = PlotList)
 
@@ -824,21 +835,24 @@ def LinearAlgebra():
     root['menu'] = Menubar
     
     root.title("Linear Algebra") #窗口的名字
-    root.geometry("800x520") #窗口的大小
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    ww = 800
+    wh = 520
+    x = (sw-ww) / 2
+    y = (sh-wh) / 2
+    root.geometry("%dx%d+%d+%d" %(ww,wh,x,y))
     root.resizable(False,False)
     root.iconbitmap('.\Calculator.ico')
-
     #窗口内容 TODO
 
     row = 2
     ide = {}
-    list1 = [] 
-    list2 = []
 
     def handle(str1):
         nonlocal row
         nonlocal ide
-        nonlocal list1, list2
+        
         str_list = str1.split('>')
         str1 = ''.join(str_list)
         str_list = str1.split(' ')  #取出' ' 和 '\n'
@@ -848,18 +862,22 @@ def LinearAlgebra():
         if str1 == "clear":   #用户输入clear
             row = 2
             t.delete(1.0,'end')
+            t1.delete(1.0,'end')
+            t1.insert(1.0,"\n"*40)
             t.insert(1.0,"input there:")
-            t.insert(1.61,"\n>>>")
+            t1.insert(2.0,">>>")
         elif str1 == "clear_all":  #用户输入clear_all
             row = 2
             t.delete(1.0,'end')
+            t1.delete(1.0,'end')
+            t1.insert(1.0,"\n"*40)
             t.insert(1.0,"input there:")
             ide = {}
             list1 = []
             list2 = []
             var1.set(list1)
             var2.set(list2)
-            t.insert(1.61,"\n>>>")
+            t1.insert(2.0,">>>")
         elif '=' in str1:   #用户输入一个等式
             str_list = str1.split('=')
             print(str_list)
@@ -869,7 +887,9 @@ def LinearAlgebra():
                     if x in ide.keys():
                         index_list = [m.start() for m in finditer(x, str_list[1])]
                         for index in index_list:
-                            if str_list[1][index+len(x)].isalpha():
+                            if (index+len(x) < len(str_list[1])) and str_list[1][index+len(x)].isalpha():  #匹配的字符串的后面一个字符是字母
+                                pass
+                            elif (index-1 >= 0) and str_list[1][index-1].isalpha():  #匹配的字符串的前面一个字符是字母
                                 pass
                             else:
                                 str_list[1] = str_list[1][0:index] + ide[x][0] + str_list[1][index+len(x):]
@@ -879,10 +899,13 @@ def LinearAlgebra():
                 list_value.append(str_list[1])
                 list_value.append(eval(str_list[1]))
                 ide[str_list[0]] = list_value #如 {'a':['2',2]}
-                temp = round(row-1+0.001+0.61,2)
-                t.insert(temp,"\n>>>")
+                temp = round(row+0.001,1)
+                t1.insert(temp,">>>")
             except:
+                row = row -1
                 mbox.showwarning(title="wrong",message="something wrong")
+            list1 = [] 
+            list2 = []
             for item in ide.keys():  #更新“变量 值”列表
                 list1.append(item)
             for item in ide.values():
@@ -894,22 +917,33 @@ def LinearAlgebra():
                 word_list = findall("[a-zA-Z]+",str1)  #找到所有标识符并替换
                 for x in word_list:
                     if x in ide.keys():
-                        str1 = str1.replace(x,ide[x][0])
+                        index_list = [m.start() for m in finditer(x, str1)]
+                        for index in index_list:
+                            if (index+len(x) < len(str1)) and str1[index+len(x)].isalpha():  #匹配的字符串的后面一个字符是字母
+                                pass
+                            elif (index-1 >= 0) and str1[index-1].isalpha():  #匹配的字符串的前面一个字符是字母
+                                pass
+                            else:
+                                str1 = str1[0:index] + ide[x][0] + str1[index+len(x):]    
                 temp = round(row-1+0.001+0.61,2)
                 t.insert(temp,"\n"+str(eval(str1)))
                 if isinstance(eval(str1),(int,float)):
                     row = row + 1
-                    t.insert(temp+1,"\n>>>")
+                    t1.insert(temp+1+1,">>>")
                 else:
                     list_size = []
                     list_size = eval(str1).shape
-                    if len(list_size) == 1:
-                        t.insert(temp+1,"\n>>>")
+                    intTemp = len(list_size)
+                    if  intTemp == 1:
+                        t1.insert(temp+1+1,">>>")
                         row = row + 1
                     else:
-                        t.insert(temp+list_size[0],"\n>>>")
+                        t1.insert(temp+list_size[0]+1,">>>")
                         row = row + list_size[0]
+                    
+                        
             except:
+                row = row - 1
                 mbox.showwarning(title="wrong",message="unknown identifier")
 
     def callBack(event):
@@ -930,13 +964,18 @@ def LinearAlgebra():
     f2.place(x=600,y=0,anchor="nw")
 
     #用于输入文本的text
-    t = Text(f1,height=40,width=85)
+    t = Text(f1,height=40,width=82)
     t.insert(1.0,"\n"*40)
     t.mark_set('here',1.0)
     t.insert('here',"input there:")
-    t.insert(2.0,">>>")
     t.bind("<Key>",callBack)   #敲空格就开始处理
-    t.place(x=0,y=0,anchor="nw")
+    t.place(x=25,y=0,anchor="nw")
+
+    #用于显示>>>的text
+    t1 = Text(f1,height=40,width=3)
+    t1.insert(1.0,"\n"*40)
+    t1.insert(2.0,">>>")
+    t1.place(x=0,y=0,anchor="nw")
 
     #显示两个label在f2上，分别是变量和值
     l1 = Label(f2,text="变量",bg="blue",width=6,height=1)
@@ -957,11 +996,10 @@ def LinearAlgebra():
     root.mainloop()  #让窗口活动起来
 
 
-'''*****************************************************************窗体设计部分*****************************************************************'''
+'''*****************************************************************2D画图部分*****************************************************************'''
 
 
 def Plot2D():
-    e=exp(1)
     PARSER = 'eval'  # eval or text
     initial_formula = "sin(x)"
     initial_x_range ="-10,10"
@@ -1059,7 +1097,7 @@ def Plot2D():
     Preference = tkinter.Menu(Menubar,tearoff = 0)
     Preference.add_command(label = '普通计算',command = lambda:main())
     Preference.add_command(label = '统计数学',command = lambda:Statistics())
-    Preference.add_command(label = '微积分',command = lambda:Calculus())
+    Preference.add_command(label = '符号数学',command = lambda:Symbolic())
     Preference.add_command(label = '线性代数',command = lambda:LinearAlgebra())
     Preference.add_cascade(label = '绘图',menu = PlotList)
 
@@ -1075,7 +1113,13 @@ def Plot2D():
     root['menu'] = Menubar
 
     root.title('Plot 2D')
-    root.geometry('800x520')
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    ww = 800
+    wh = 520
+    x = (sw-ww) / 2
+    y = (sh-wh) / 2
+    root.geometry("%dx%d+%d+%d" %(ww,wh,x,y))
     root.resizable(False,False)
     root.iconbitmap('.\Calculator.ico')
     a = tkinter.Entry(root)
@@ -1102,11 +1146,10 @@ def Plot2D():
     root.mainloop()
 
 
-'''*****************************************************************窗体设计部分*****************************************************************'''
+'''*****************************************************************3D画图部分*****************************************************************'''
+
 
 def Plot3D():
-
-    e=exp(1)
 
     WIRE = True
     HIDE = False
@@ -1323,7 +1366,7 @@ def Plot3D():
     Preference = tkinter.Menu(Menubar,tearoff = 0)
     Preference.add_command(label = '普通计算',command = lambda:main())
     Preference.add_command(label = '统计数学',command = lambda:Statistics())
-    Preference.add_command(label = '微积分',command = lambda:Calculus())
+    Preference.add_command(label = '符号数学',command = lambda:Symbolic())
     Preference.add_command(label = '线性代数',command = lambda:LinearAlgebra())
     Preference.add_cascade(label = '绘图',menu = PlotList)
 
@@ -1338,7 +1381,13 @@ def Plot3D():
     root['menu'] = Menubar
     
     root.title('Plot 3D')
-    root.geometry('800x520')
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    ww = 800
+    wh = 520
+    x = (sw-ww) / 2
+    y = (sh-wh) / 2
+    root.geometry("%dx%d+%d+%d" %(ww,wh,x,y))
     root.resizable(False,False)
     root.iconbitmap('.\Calculator.ico')
     a = tkinter.Entry(root)
@@ -1374,7 +1423,7 @@ def Plot3D():
     b1.place(x = 360,y = 300,height = 50)
     root.mainloop()
 
-'''*****************************************************************窗体设计部分*****************************************************************'''
+'''*****************************************************************统计数学部分*****************************************************************'''
 
 
 def Statistics():
@@ -1397,7 +1446,7 @@ def Statistics():
     Preference = tkinter.Menu(Menubar,tearoff = 0)
     Preference.add_command(label = '普通计算',command = lambda:main())
     Preference.add_command(label = '统计数学',command = lambda:Statistics())
-    Preference.add_command(label = '微积分',command = lambda:Calculus.main())
+    Preference.add_command(label = '符号数学',command = lambda:Symbolic())
     Preference.add_command(label = '线性代数',command = lambda:LinearAlgebra())
     Preference.add_cascade(label = '绘图',menu = PlotList)
 
@@ -1412,11 +1461,17 @@ def Statistics():
     root['menu'] = Menubar
 
     #窗体大小、名称与图标
-    root.maxsize(320,480)
-    root.minsize(320,480)
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    ww = 320
+    wh = 480
+    x = (sw-ww) / 2
+    y = (sh-wh) / 2
+    root.geometry("%dx%d+%d+%d" %(ww,wh,x,y))
     root.title('Statistics')
     root.iconbitmap('.\Calculator.ico')
     root.resizable(False,False)
+    root.geometry("+100+100")
 
     table = ttk.Treeview(root)
     table["columns"] = ("x","y")
@@ -1523,10 +1578,6 @@ def Statistics():
     btnPFit = tkinter.Button(root,text = 'Ployfit',font = ('微软雅黑',7),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressFunc('PFit'))
     btnPFit.place(x = 265,y = 410,width = 40,height = 30)
 
-
-    '''*****************************************************************功能实现部分*****************************************************************'''
-
-
     i = 0
     curX = 0
     curY = 0
@@ -1559,11 +1610,15 @@ def Statistics():
     table.bind("<Double-1>", onDBClick)
 
     def focusShift(event):
+        nonlocal TreeModify
         if event.char == '\r':
             if root.focus_get() == entryIndex:
                 entryXi.focus()
             elif root.focus_get() == entryXi:
                 entryYi.focus()
+            elif root.focus_get() == entryYi:
+                TreeModify('ins')
+                entryXi.focus()
             else:
                 pass
         else:
@@ -1670,7 +1725,13 @@ def Statistics():
         popup = tkinter.Toplevel()
         popup.withdraw()
         popup.iconbitmap('.\Calculator.ico')
-        popup.geometry('200x150')
+        popup_sw = popup.winfo_screenwidth()
+        popup_sh = popup.winfo_screenheight()
+        popup_ww = 200
+        popup_wh = 150
+        popup_wx = (popup_sw-popup_ww) / 2
+        popup_wy = (popup_sh-popup_wh) / 2
+        popup.geometry("%dx%d+%d+%d" %(popup_ww,popup_wh,popup_wx,popup_wy))
         popup.resizable(False,False)
         popup.title('Statistics')
         N = tkinter.StringVar()
@@ -1680,9 +1741,9 @@ def Statistics():
         labelN.place(x = 20,y = 40, width = 100)
         entryN = tkinter.Entry(popup,textvariable = N,validate = 'key', validatecommand=(testI,'%P'))
         entryN.place(x = 120,y = 40, width = 60)
-        btnN = tkinter.Button(popup,text = '确定',font = ('微软雅黑',7),fg = ('#4F4F4F'),bd = 0.5,command = lambda:(getN(N.get())))
+        btnN = tkinter.Button(popup,text = '确定',font = ('微软雅黑',7),fg = ('#4F4F4F'),bd = 0.5,command = lambda:(drawFit(N.get())))
         btnN.place(x = 80,y = 80,width = 40,height = 30)
-        def getN(s):
+        def drawFit(s):
             nonlocal n
             n = int(s)
             z = numpy.polyfit(x, y, n)
@@ -1811,105 +1872,14 @@ def Statistics():
             pass
     root.mainloop()
 
-def Calculus():
+
+'''*****************************************************************符号数学部分*****************************************************************'''
+
+
+def Symbolic():
     global root
     def about():
         tkinter.messagebox.showinfo('关于',message = '组长：阮超逸\n组员：周高超、肖文宗')
-
-
-    #整体符号表：每一项都是一个整体，按BS删除时一起删除
-    FuncSym = ['log10(', 'e^','ln(','log(','abs(', 'limit(','diff(','∫(','simplify(','series(',
-               'sin(','cos(','tan(','arcsin(','arccos(','arctan(','1j','solve(',
-               'sinh(','cosh(','tanh(','arcsinh(','arccosh(','arctanh(']
-
-    #单字符符号表,规定mod为单字符符号
-    SingleSym = ['.',',','+','-','×','*','/','^']
-
-    #二元运算符号表
-    OperaSym = SingleSym[2:]
-
-    #数值符号表：每一项都能转化为一个数。注意e在十进制中与十六进制中不同的含义
-    NumSym = ['0','1','2','3','4','5','6','7','8','9','x','y','z',
-              'pi','e']
-
- 
-    x = sympy.Symbol('x')
-    y = sympy.Symbol('y')
-    z = sympy.Symbol('z')
-
-    #表达式输入
-    def PressExpr(Sym):
-        nonlocal x,y,z,FuncSym,SingleSym,NumSym
-        curExpr = result.get()
-        newExpr = curExpr + Sym
-        result.set(newExpr)
-    
-
-    #控制按键输入
-    def PressCtrl(Sym):
-        curExpr = result.get() 
-        if Sym == 'AC':
-            result.set('')
-            result2.set('')
-        elif Sym == 'CE':
-            result.set('')
-        elif Sym == 'backspace':
-            for i in range(-10,-1):
-                if curExpr[i:] in FuncSym:
-                    result.set(curExpr[0:i])
-                    return
-            result.set(curExpr[0:-1])
-        else:
-            pass
-
-    #计算表达式的值
-    def PressEqual():
-        nonlocal x,y,z,FuncSym,SingleSym,NumSym
-        try:
-            DispStr = result.get()
-            CompStr = DispStr
-            CompStr = CompStr.replace('^','**')
-            CompStr = CompStr.replace('π','pi')
-            CompStr = CompStr.replace('×','*')
-            CompStr = CompStr.replace('∞','oo')
-            CompStr = CompStr.replace('∫','integrate')
-            CompStr = CompStr.replace('arcsin','asin')
-            CompStr = CompStr.replace('arccos','acos')
-            CompStr = CompStr.replace('arctan','atan')
-            CompStr = CompStr.replace('arcsinh','asinh')
-            CompStr = CompStr.replace('arccosh','acosh')
-            CompStr = CompStr.replace('arctanh','atanh')
-            CompStr = CompStr.replace('ln','log')
-            if not(CompStr.find('0**0')):
-                raise ValueError
-            ans = str(eval(CompStr))
-            ans = ans.replace('**','^')
-            ans = ans.replace('pi','π')
-            ans = ans.replace('*','×')
-            ans = ans.replace('oo','∞')
-            ans = ans.replace('integrate','∫')
-            ans = ans.replace('asin','arcsin')
-            ans = ans.replace('acos','arccos')
-            ans = ans.replace('atan','arctan')
-            ans = ans.replace('asinh','arcsinh')
-            ans = ans.replace('acosh','arccosh')
-            ans = ans.replace('atanh','arctanh')
-            ans = ans.replace('log','ln')
-            result.set(ans)
-            result2.set(DispStr)
-            return 0
-        except ZeroDivisionError:
-            tkinter.messagebox.showerror('除零错误',message = '除法计算时！除数不能为0！')
-            return -1
-        '''except ValueError:
-            tkinter.messagebox.showerror('非法运算',message = '结果异常！请检查计算是否合法！')
-            return -1
-        except OverflowError:
-            tkinter.messagebox.showerror('上界溢出',message = '结果超过了程序最大可表示范围！')
-            return -1
-        except:
-            tkinter.messagebox.showerror('语法错误',message = '表达式有误！')
-            return -1'''
     
     try:
         root.destroy()
@@ -1927,7 +1897,7 @@ def Calculus():
     Preference = tkinter.Menu(Menubar,tearoff = 0)
     Preference.add_command(label = '普通计算',command = lambda:main())
     Preference.add_command(label = '统计数学',command = lambda:Statistics())
-    Preference.add_command(label = '微积分',command = lambda:Calculus.main())
+    Preference.add_command(label = '符号数学',command = lambda:Symbolic())
     Preference.add_command(label = '线性代数',command = lambda:LinearAlgebra())
     Preference.add_cascade(label = '绘图',menu = PlotList)
 
@@ -1946,19 +1916,22 @@ def Calculus():
     Menubar.add_cascade(label = '帮助',menu = Help)
     root['menu'] = Menubar
 
-    root.maxsize(730,520)
-    root.minsize(730,520)
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    ww = 730
+    wh = 520
+    x = (sw-ww) / 2
+    y = (sh-wh) / 2
+    root.geometry("%dx%d+%d+%d" %(ww,wh,x,y))
     root.resizable(False,False)
-    root.title('Calculus')
-    root.iconbitmap('.\Calculator.ico')
+    root.title('Symbolic')
+    root.iconbitmap('.\Calculator.ico') 
 
     #当前表达式（计算结果）、上一次计算的表达式与‘M’累加器显示屏
     result = tkinter.StringVar()    #当前表达式（结果）
     result.set('')
     result2 = tkinter.StringVar()   #上一次计算的表达式
     result2.set('')
-
-
 
     #对应的显示屏
     label = tkinter.Label(root,font = ('微软雅黑',15),bg = '#EEE9E9',bd ='9',fg = '#828282',anchor = 'se',textvariable = result2)
@@ -1968,152 +1941,138 @@ def Calculus():
 
     #常用区数字按键：0-9、百分数‘%’、小数点‘.’、圆周率π、自然对数的底数e和结果寄存器ans
     btn7 = tkinter.Button(root,text = '7',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('7'))
-    btn7.place(x = 450-70,y = 285,width = 60,height = 50)
+    btn7.place(x = 380,y = 285,width = 60,height = 50)
     btn8 = tkinter.Button(root,text = '8',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('8'))
-    btn8.place(x = 520-70,y = 285,width = 60,height = 50)
+    btn8.place(x = 450,y = 285,width = 60,height = 50)
     btn9 = tkinter.Button(root,text = '9',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('9'))
-    btn9.place(x = 590-70,y = 285,width = 60,height = 50)
+    btn9.place(x = 520,y = 285,width = 60,height = 50)
     btn4 = tkinter.Button(root,text = '4',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('4'))
-    btn4.place(x = 450-70,y = 340,width = 60,height = 50)
+    btn4.place(x = 380,y = 340,width = 60,height = 50)
     btn5 = tkinter.Button(root,text = '5',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('5'))
-    btn5.place(x = 520-70,y = 340,width = 60,height = 50)
+    btn5.place(x = 450,y = 340,width = 60,height = 50)
     btn6 = tkinter.Button(root,text = '6',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('6'))
-    btn6.place(x = 590-70,y = 340,width = 60,height = 50)
+    btn6.place(x = 520,y = 340,width = 60,height = 50)
     btn1 = tkinter.Button(root,text = '1',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('1'))
-    btn1.place(x = 450-70,y = 395,width = 60,height = 50)
+    btn1.place(x = 380,y = 395,width = 60,height = 50)
     btn2 = tkinter.Button(root,text = '2',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('2'))
-    btn2.place(x = 520-70,y = 395,width = 60,height = 50)
+    btn2.place(x = 450,y = 395,width = 60,height = 50)
     btn3 = tkinter.Button(root,text = '3',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('3'))
-    btn3.place(x = 590-70,y = 395,width = 60,height = 50)
+    btn3.place(x = 520,y = 395,width = 60,height = 50)
     btn0 = tkinter.Button(root,text = '0',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('0'))
-    btn0.place(x = 520-70,y = 450,width = 60,height = 50)
+    btn0.place(x = 450,y = 450,width = 60,height = 50)
     btnComma = tkinter.Button(root,text = ',',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda :PressExpr (','))
-    btnComma.place(x = 450-70,y = 450,width = 60,height = 50)
+    btnComma.place(x = 380,y = 450,width = 60,height = 50)
     btnDot = tkinter.Button(root,text = '.',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('.'))
-    btnDot.place(x = 590-70,y = 450,width = 60,height = 50)
+    btnDot.place(x = 520,y = 450,width = 60,height = 50)
     btnPi = tkinter.Button(root,text = 'π',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('π'))
-    btnPi.place(x = 730-70,y = 285,width = 60,height = 50)
-    btne = tkinter.Button(root,text = 'e',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('e'))
-    btne.place(x = 730-70,y = 340,width = 60,height = 50)
+    btnPi.place(x = 660,y = 285,width = 60,height = 50)
+    btne = tkinter.Button(root,text = 'E',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('E'))
+    btne.place(x = 660,y = 340,width = 60,height = 50)
     btnAns = tkinter.Button(root,text = '∞',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressExpr('∞'))
-    btnAns.place(x = 730-70,y = 395,width = 60,height = 50)
+    btnAns.place(x = 660,y = 395,width = 60,height = 50)
 
     btnv = tkinter.Button(root,text = 'x',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('x'))
-    btnv.place(x = 450-70,y = 175,width = 60,height = 50)
+    btnv.place(x = 380,y = 175,width = 60,height = 50)
     btnw = tkinter.Button(root,text = 'y',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('y'))
-    btnw.place(x = 520-70,y = 175,width = 60,height = 50)
+    btnw.place(x = 450,y = 175,width = 60,height = 50)
     btnx = tkinter.Button(root,text = 'z',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('z'))
-    btnx.place(x = 590-70,y = 175,width = 60,height = 50)
+    btnx.place(x = 520,y = 175,width = 60,height = 50)
     btny = tkinter.Button(root,text = '[',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('['))
-    btny.place(x = 660-70,y = 175,width = 60,height = 50)
+    btny.place(x = 590,y = 175,width = 60,height = 50)
     btnz = tkinter.Button(root,text = ']',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr(']'))
-    btnz.place(x = 730-70,y = 175,width = 60,height = 50)
+    btnz.place(x = 660,y = 175,width = 60,height = 50)
 
 
     #常用区运算符、控制符按键：AC、CE、BS、左括号‘(’、右括号‘)’、+、-、×、/、计算（Calc）
     btnAc = tkinter.Button(root,text = 'AC',bd = 0.5,font = ('微软雅黑',12),fg = 'orange',command = lambda:PressCtrl('AC'))
-    btnAc.place(x = 450-70,y = 230,width = 60,height = 50)
+    btnAc.place(x = 380,y = 230,width = 60,height = 50)
     btnCe = tkinter.Button(root,text = 'CE',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressCtrl('CE'))
-    btnCe.place(x = 520-70,y = 230,width = 60,height = 50)
+    btnCe.place(x = 450,y = 230,width = 60,height = 50)
     btnBack = tkinter.Button(root,text = '←',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressCtrl('backspace'))
-    btnBack.place(x = 590-70,y = 230,width = 60,height = 50)
+    btnBack.place(x = 520,y = 230,width = 60,height = 50)
     btnLpar = tkinter.Button(root,text = '(',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('('))
-    btnLpar.place(x = 660-70,y = 230,width = 60,height = 50)
+    btnLpar.place(x = 590,y = 230,width = 60,height = 50)
     btnRpar = tkinter.Button(root,text =')',font = ('微软雅黑',12),fg = "#4F4F4F",bd = 0.5,command = lambda:PressExpr(')'))
-    btnRpar.place(x = 730-70,y = 230,width = 60,height = 50)
+    btnRpar.place(x = 660,y = 230,width = 60,height = 50)
     btnAdd = tkinter.Button(root,text = '+',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('+'))
-    btnAdd.place(x = 660-70,y = 285,width = 60,height = 50)
+    btnAdd.place(x = 590,y = 285,width = 60,height = 50)
     btnSub = tkinter.Button(root,text = '-',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('-'))
-    btnSub.place(x = 660-70,y = 340,width = 60,height = 50)
+    btnSub.place(x = 590,y = 340,width = 60,height = 50)
     btnMul = tkinter.Button(root,text = '×',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('×'))
-    btnMul.place(x = 660-70,y = 395,width = 60,height = 50)
+    btnMul.place(x = 590,y = 395,width = 60,height = 50)
     btnDiv = tkinter.Button(root,text = '÷',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('/'))
-    btnDiv.place(x = 660-70,y = 450,width = 60,height = 50)
+    btnDiv.place(x = 590,y = 450,width = 60,height = 50)
     btnCalc = tkinter.Button(root,text = 'Calc',bg = 'orange',font = ('微软雅黑',12),fg = ('#4F4F4F'),bd = 0.5,command = lambda:PressEqual())
-    btnCalc.place(x = 730-70,y = 450,width = 60,height = 50)
+    btnCalc.place(x = 660,y = 450,width = 60,height = 50)
 
     #功能函数键右1:平方、立方、开根号、倒数、10的幂、工程对数
     btnSqr = tkinter.Button(root,text = 'x^2',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('^2'))
-    btnSqr.place(x = 360-70,y = 175,width = 60,height = 50)
+    btnSqr.place(x = 290,y = 175,width = 60,height = 50)
     btnCub = tkinter.Button(root,text = 'x^3',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('^3'))
-    btnCub.place(x = 360-70,y = 230,width = 60,height = 50)
+    btnCub.place(x = 290,y = 230,width = 60,height = 50)
     btnSqrt = tkinter.Button(root,text = '√x',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('^0.5'))
-    btnSqrt.place(x = 360-70,y = 285,width = 60,height = 50)
+    btnSqrt.place(x = 290,y = 285,width = 60,height = 50)
     btnRev = tkinter.Button(root,text = '1/x',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('^-1'))
-    btnRev.place(x = 360-70,y = 340,width = 60,height = 50)
+    btnRev.place(x = 290,y = 340,width = 60,height = 50)
     btnPow10 = tkinter.Button(root,text = '10^x',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('10^'))
-    btnPow10.place(x = 360-70,y = 395,width = 60,height = 50)
-    btnLog10 = tkinter.Button(root,text = 'log10',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('log10('))
-    btnLog10.place(x = 360-70,y = 450,width = 60,height = 50)
+    btnPow10.place(x = 290,y = 395,width = 60,height = 50)
+    btnPow = tkinter.Button(root,text = 'x^y',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('^'))
+    btnPow.place(x = 290,y = 450,width = 60,height = 50)
 
     #功能函数键右2：x^y，e的幂（注意与10的幂区分）、自然对数、一般对数、求余、绝对值
-    btnExp = tkinter.Button(root,text = 'e^x',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('e^'))
-    btnExp.place(x = 290-70,y = 175,width = 60,height = 50)
+    btnExp = tkinter.Button(root,text = 'E^x',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('exp('))
+    btnExp.place(x = 220,y = 175,width = 60,height = 50)
     btnLn = tkinter.Button(root,text = 'ln',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('ln('))
-    btnLn.place(x = 290-70,y = 230,width = 60,height = 50)
-    btnPow = tkinter.Button(root,text = 'x^y',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('^'))
-    btnPow.place(x = 290-70,y = 285,width = 60,height = 50)
-    btnLog = tkinter.Button(root,text = 'log(a,b)',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('log('))
-    btnLog.place(x = 290-70,y = 340,width = 60,height = 50)
-    btnMod = tkinter.Button(root,text = 'j',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('1j'))
-    btnMod.place(x = 290-70,y = 395,width = 60,height = 50)
-    btnAbs = tkinter.Button(root,text = 'abs',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('abs('))
-    btnAbs.place(x = 290-70,y = 450,width = 60,height = 50)
+    btnLn.place(x = 220,y = 230,width = 60,height = 50)
+    btnLog = tkinter.Button(root,text = 'log(b,a)',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('log('))
+    btnLog.place(x = 220,y = 285,width = 60,height = 50)
+    btnAbs = tkinter.Button(root,text = 'Abs',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('Abs('))
+    btnAbs.place(x = 220,y = 340,width = 60,height = 50)
+    btnI = tkinter.Button(root,text = 'i',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('i'))
+    btnI.place(x = 220,y = 395,width = 60,height = 50)
+    btnConj = tkinter.Button(root,text = 'Conj',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('Conj('))
+    btnConj.place(x = 220,y = 450,width = 60,height = 50)
 
     #功能函数键右3：（反）三角函数与（反）双曲函数，双曲函数按‘↑’切换
     btnSin = tkinter.Button(root,text = 'sin',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('sin('))
-    btnSin.place(x = 220-70,y = 175,width = 60,height = 50)
+    btnSin.place(x = 150,y = 175,width = 60,height = 50)
     btnCos = tkinter.Button(root,text = 'cos',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('cos('))
-    btnCos.place(x = 220-70,y = 230,width = 60,height = 50)
+    btnCos.place(x = 150,y = 230,width = 60,height = 50)
     btnTan = tkinter.Button(root,text = 'tan',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('tan('))
-    btnTan.place(x = 220-70,y = 285,width = 60,height = 50)
+    btnTan.place(x = 150,y = 285,width = 60,height = 50)
     btnAsin = tkinter.Button(root,text = 'arcsin',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('arcsin('))
-    btnAsin.place(x = 220-70,y = 340,width = 60,height = 50)
+    btnAsin.place(x = 150,y = 340,width = 60,height = 50)
     btnAcos = tkinter.Button(root,text = 'arccos',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('arccos('))
-    btnAcos.place(x = 220-70,y = 395,width = 60,height = 50)
+    btnAcos.place(x = 150,y = 395,width = 60,height = 50)
     btnAtan = tkinter.Button(root,text = 'arctan',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('arctan('))
-    btnAtan.place(x = 220-70,y = 450,width = 60,height = 50)
+    btnAtan.place(x = 150,y = 450,width = 60,height = 50)
 
     btnSinh = tkinter.Button(root,text = 'sinh',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('sinh('))
-    btnSinh.place(x = 150-70,y = 175,width = 60,height = 50)
+    btnSinh.place(x = 80,y = 175,width = 60,height = 50)
     btnCosh = tkinter.Button(root,text = 'cosh',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('cosh('))
-    btnCosh.place(x = 150-70,y = 230,width = 60,height = 50)
+    btnCosh.place(x = 80,y = 230,width = 60,height = 50)
     btnTanh = tkinter.Button(root,text = 'tanh',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('tanh('))
-    btnTanh.place(x = 150-70,y = 285,width = 60,height = 50)
+    btnTanh.place(x = 80,y = 285,width = 60,height = 50)
     btnAsinh = tkinter.Button(root,text = 'arcsinh',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('arcsinh('))
-    btnAsinh.place(x = 150-70,y = 340,width = 60,height = 50)
+    btnAsinh.place(x = 80,y = 340,width = 60,height = 50)
     btnAcosh = tkinter.Button(root,text = 'arccosh',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('arccosh('))
-    btnAcosh.place(x = 150-70,y = 395,width = 60,height = 50)
+    btnAcosh.place(x = 80,y = 395,width = 60,height = 50)
     btnAtanh = tkinter.Button(root,text = 'arctanh',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('arctanh('))
-    btnAtanh.place(x = 150-70,y = 450,width = 60,height = 50)
-
+    btnAtanh.place(x = 80,y = 450,width = 60,height = 50)
 
     btnLim = tkinter.Button(root,text = 'limit',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('limit('))
-    btnLim.place(x = 80-70,y = 175,width = 60,height = 50)
+    btnLim.place(x = 10,y = 175,width = 60,height = 50)
     btnDiff = tkinter.Button(root,text = 'diff',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('diff('))
-    btnDiff.place(x = 80-70,y = 230,width = 60,height = 50)
+    btnDiff.place(x = 10,y = 230,width = 60,height = 50)
     btnInt = tkinter.Button(root,text = '∫',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('∫('))
-    btnInt.place(x = 80-70,y = 285,width = 60,height = 50)
+    btnInt.place(x = 10,y = 285,width = 60,height = 50)
     btnSolve = tkinter.Button(root,text = 'solve',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('solve('))
-    btnSolve.place(x = 80-70,y = 340,width = 60,height = 50)
+    btnSolve.place(x = 10,y = 340,width = 60,height = 50)
     btnSeries = tkinter.Button(root,text = 'series',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('series('))
-    btnSeries.place(x = 80-70,y = 395,width = 60,height = 50)   
+    btnSeries.place(x = 10,y = 395,width = 60,height = 50)   
     btnSimp = tkinter.Button(root,text = 'simplify',font = ('微软雅黑',12),fg = '#4F4F4F',bd = 0.5,command = lambda:PressExpr('simplify('))
-    btnSimp.place(x = 80-70,y = 450,width = 60,height = 50)
-    
+    btnSimp.place(x = 10,y = 450,width = 60,height = 50)
 
-
-    '''*****************************************************************功能实现部分*****************************************************************'''
-
-    NumBtn =    [btn0, btn1, btn2, btn3, btn4, btn5, btn6,  btn7, btn8, btn9]
-
-    FuncBtn =   [btnSqr,   btnCub,  btnSqrt, btnRev,  btnPow10, btnLog10,
-                 btnExp,   btnLn,   btnPow,  btnLog,  btnAbs,   btnComma,
-                 btnSin,   btnCos,  btnTan,  btnAsin, btnAcos,  btnAtan]
-    
-
-
-    
 
     #监视键盘的有效输入，以及菜单与快捷键的复制粘贴
     def GetKey(event):
@@ -2144,6 +2103,153 @@ def Calculus():
     root.bind('<Control-v>', Paste)
     root.bind('<Key>', GetKey)
     label2.bind('<Button-3>', EditExpr)
+
+    NumBtn =    [btn0, btn1, btn2, btn3, btn4, btn5, btn6,  btn7, btn8, btn9]
+
+    FuncBtn =   [btnSqr,   btnCub,  btnSqrt, btnRev,  btnPow10, btnConj,
+                 btnExp,   btnLn,   btnPow,  btnLog,  btnAbs,   btnComma,
+                 btnSin,   btnCos,  btnTan,  btnAsin, btnAcos,  btnAtan]
+    
+    #整体符号表：每一项都是一个整体，按BS删除时一起删除
+    FuncSym = ['Conj(','10^','E^', 'exp(','ln(','log(','Abs(', 'limit(','diff(','∫(',
+               'sin(','cos(','tan(','arcsin(','arccos(','arctan(','solve(','sqrt(''simplify(',
+               'series(','sinh(','cosh(','tanh(','arcsinh(','arccosh(','arctanh(','nan']
+
+    #单字符符号表,规定mod为单字符符号
+    SingleSym = ['.',',','+','-','×','*','/','^']
+
+    #二元运算符号表
+    OperaSym = SingleSym[2:]
+
+    #数值符号表：每一项都能转化为一个数。注意e在十进制中与十六进制中不同的含义
+    NumSym = ['0','1','2','3','4','5','6','7','8','9','x','y','z',
+              'pi','E','i']
+
+ 
+    x = sympy.Symbol('x')
+    y = sympy.Symbol('y')
+    z = sympy.Symbol('z')
+    priorAns = False
+
+    def exp(x):
+        return sympy.exp(x)
+    
+    def sin(x):
+        return sympy.sin(x)
+        
+    def cos(x):
+        return sympy.cos(x)
+        
+    def tan(x):
+        return sympy.tan(x)
+
+    def arcsin(x):
+        return sympy.asin(x)
+        
+    def arccos(x):
+        return sympy.acos(x)
+       
+    def arctan(x):
+        return sympy.atan(x)
+
+    #函数转名加壳，方便计算时使用eval()函数
+    def sinh(x):
+        return sympy.sinh(x)
+
+    def cosh(x):
+        return sympy.cosh(x)
+
+    def tanh(x):
+        return sympy.tanh(x)
+    
+    def arcsinh(x):
+        return sympy.asinh(x)
+
+    def arccosh(x):
+        return sympy.acosh(x)
+
+    def arctanh(x):
+        return sympy.atanh(x)
+
+    def ln(x):
+        return sympy.log(x)
+
+    def log(b,a):
+        return sympy.log(a,b)
+
+    #表达式输入
+    def PressExpr(Sym):
+        nonlocal x,y,z,priorAns,FuncSym,SingleSym,NumSym
+        if priorAns == True and Sym in FuncSym:
+            result.set('')
+        priorAns = False
+        curExpr = result.get()
+        newExpr = curExpr + Sym
+        result.set(newExpr)
+    
+
+    #控制按键输入
+    def PressCtrl(Sym):
+        curExpr = result.get()
+        priorAns = False
+        if Sym == 'AC':
+            result.set('')
+            result2.set('')
+        elif Sym == 'CE':
+            result.set('')
+        elif Sym == 'backspace':
+            for i in range(-10,-1):
+                if curExpr[i:] in FuncSym:
+                    result.set(curExpr[0:i])
+                    return
+            result.set(curExpr[0:-1])
+        else:
+            pass
+
+    #计算表达式的值
+    def PressEqual():
+        nonlocal x,y,z,priorAns,FuncSym,SingleSym,NumSym
+        nonlocal exp,sin,cos,tan,arcsin,arccos,arctan,sinh,cosh,tanh,arcsinh,arccosh,arctanh,ln,log
+        try:
+            DispStr = result.get()
+            CompStr = DispStr
+            CompStr = CompStr.replace('^','**')
+            CompStr = CompStr.replace('π','sympy.pi')
+            CompStr = CompStr.replace('×','*')
+            CompStr = CompStr.replace('∞','oo')
+            CompStr = CompStr.replace('∫','integrate')
+            if not(CompStr.find('0**0')):
+                raise ValueError
+            ans = str(eval(CompStr))
+            ans = ans.replace('**','^')
+            ans = ans.replace('pi','π')
+            ans = ans.replace('*','×')
+            ans = ans.replace('oo','∞')
+            ans = ans.replace('Integrate','∫')
+            ans = ans.replace('log','ln')
+            ans = ans.replace('asinh','arcsinh')
+            ans = ans.replace('acosh','arccosh')
+            ans = ans.replace('atanh','arctanh')
+            ans = ans.replace('asin','arcsin')
+            ans = ans.replace('acos','arccos')
+            ans = ans.replace('atan','arctan')
+            ans = ans.replace('I','i')
+            result.set(ans)
+            result2.set(DispStr)
+            priorAns = True
+            return 0
+        except ZeroDivisionError:
+            tkinter.messagebox.showerror('除零错误',message = '除法计算时！除数不能为0！')
+            return -1
+        except ValueError:
+            tkinter.messagebox.showerror('非法运算',message = '结果异常！请检查计算是否合法！')
+            return -1
+        except OverflowError:
+            tkinter.messagebox.showerror('上界溢出',message = '结果超过了程序最大可表示范围！')
+            return -1
+        except:
+            tkinter.messagebox.showerror('语法错误',message = '表达式有误！')
+            return -1
 
     root.mainloop()
 
